@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calcolo Ore Lavorative</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    input[type="time"] {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .total-hours {
+      font-weight: bold;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Calcolo Ore Lavorative</h1>
+
+  <label for="month">Seleziona Mese:</label>
+  <select id="month">
+    <option value="0">Gennaio</option>
+    <option value="1">Febbraio</option>
+    <option value="2">Marzo</option>
+    <option value="3">Aprile</option>
+    <option value="4">Maggio</option>
+    <option value="5">Giugno</option>
+    <option value="6">Luglio</option>
+    <option value="7">Agosto</option>
+    <option value="8">Settembre</option>
+    <option value="9">Ottobre</option>
+    <option value="10">Novembre</option>
+    <option value="11">Dicembre</option>
+  </select>
+
+  <label for="year">Seleziona Anno:</label>
+  <input type="number" id="year" value="2023" min="2000" max="2100">
+
+  <button onclick="generateCalendar()">Genera Calendario</button>
+
+  <table id="calendar">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Giorno</th>
+        <th>Entrata (hh:mm)</th>
+        <th>Uscita (hh:mm)</th>
+        <th>Ore Lavorate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Le righe verranno generate dinamicamente -->
+    </tbody>
+  </table>
+
+  <div class="total-hours">
+    Ore Totali Lavorate: <span id="totalHours">00:00</span>
+  </div>
+
+  <script>
+    function generateCalendar() {
+      const month = parseInt(document.getElementById('month').value);
+      const year = parseInt(document.getElementById('year').value);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const calendarBody = document.querySelector('#calendar tbody');
+      calendarBody.innerHTML = '';
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const row = document.createElement('tr');
+
+        // Colonna Data
+        const dateCell = document.createElement('td');
+        dateCell.textContent = date.toLocaleDateString('it-IT');
+        row.appendChild(dateCell);
+
+        // Colonna Giorno
+        const dayCell = document.createElement('td');
+        dayCell.textContent = date.toLocaleDateString('it-IT', { weekday: 'long' });
+        row.appendChild(dayCell);
+
+        // Colonna Entrata
+        const entryCell = document.createElement('td');
+        const entryInput = document.createElement('input');
+        entryInput.type = 'time';
+        entryInput.addEventListener('change', calculateHours);
+        entryCell.appendChild(entryInput);
+        row.appendChild(entryCell);
+
+        // Colonna Uscita
+        const exitCell = document.createElement('td');
+        const exitInput = document.createElement('input');
+        exitInput.type = 'time';
+        exitInput.addEventListener('change', calculateHours);
+        exitCell.appendChild(exitInput);
+        row.appendChild(exitCell);
+
+        // Colonna Ore Lavorate
+        const hoursCell = document.createElement('td');
+        hoursCell.textContent = '00:00';
+        row.appendChild(hoursCell);
+
+        calendarBody.appendChild(row);
+      }
+
+      calculateTotalHours();
+    }
+
+    function calculateHours(event) {
+      const row = event.target.closest('tr');
+      const entryInput = row.querySelector('input[type="time"]:nth-of-type(1)');
+      const exitInput = row.querySelector('input[type="time"]:nth-of-type(2)');
+      const hoursCell = row.querySelector('td:nth-of-type(5)');
+
+      if (entryInput.value && exitInput.value) {
+        const entryTime = new Date(`1970-01-01T${entryInput.value}:00`);
+        const exitTime = new Date(`1970-01-01T${exitInput.value}:00`);
+        const diff = exitTime - entryTime;
+
+        const hours = Math.floor(diff / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        hoursCell.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      } else {
+        hoursCell.textContent = '00:00';
+      }
+
+      calculateTotalHours();
+    }
+
+    function calculateTotalHours() {
+      const hoursCells = document.querySelectorAll('#calendar tbody td:nth-of-type(5)');
+      let totalMinutes = 0;
+
+      hoursCells.forEach(cell => {
+        const [hours, minutes] = cell.textContent.split(':').map(Number);
+        totalMinutes += hours * 60 + minutes;
+      });
+
+      const totalHours = Math.floor(totalMinutes / 60);
+      const remainingMinutes = totalMinutes % 60;
+      document.getElementById('totalHours').textContent = `${String(totalHours).padStart(2, '0')}:${String(remainingMinutes).padStart(2, '0')}`;
+    }
+
+    // Genera il calendario al caricamento della pagina
+    window.onload = generateCalendar;
+  </script>
+</body>
+</html>
